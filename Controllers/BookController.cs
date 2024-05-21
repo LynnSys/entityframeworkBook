@@ -72,7 +72,6 @@ namespace BookEntityFramework.Controllers
         [Route("/EnterNewBook")]
         public async Task<ActionResult<Book>> CreateBook(BookDto b)
         {
-            // Map DTO to Entity
             var book = new Book
             {
                 Title = b.Title,
@@ -102,22 +101,17 @@ namespace BookEntityFramework.Controllers
                 .Where(a => b.AuthorIds.Contains(a.AuthorId))
                 .ToListAsync();
 
-            // Assign authors to the book
             book.Authors = authors;
-
-            // Add the book to the context
             _context.Books.Add(book);
-
-            // Save changes to the database
             await _context.SaveChangesAsync();
 
             return Ok(book);
         }
 
-        [HttpPut("UpdateBook/{id}")]
+        [HttpPut]
+        [Route("/UpdateBookByID")]
         public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
         {
-            // Find the existing book by ID
             var book = await _context.Books
                 .Include(b => b.Authors)
                 .FirstOrDefaultAsync(b => b.BookId == id);
@@ -127,14 +121,12 @@ namespace BookEntityFramework.Controllers
                 return NotFound("Book not found");
             }
 
-            // Fetch the genre from the database
             var genre = await _context.Genres.FindAsync(updateBookDto.GenreId);
             if (genre == null)
             {
                 return BadRequest("Invalid GenreId");
             }
 
-            // Fetch authors from the database
             var authors = await _context.Authors
                 .Where(a => updateBookDto.AuthorIds.Contains(a.AuthorId))
                 .ToListAsync();
@@ -143,8 +135,6 @@ namespace BookEntityFramework.Controllers
             {
                 return BadRequest("One or more AuthorIds are invalid");
             }
-
-            // Update the book properties
             book.Description = updateBookDto.Description;
             book.Price = updateBookDto.Price;
             book.AverageRating = updateBookDto.AverageRating;
@@ -152,12 +142,25 @@ namespace BookEntityFramework.Controllers
             book.Genre = genre;
             book.Authors = authors;
             book.UpdatedAt = DateTime.Now;
-
-            // Save changes to the database
             await _context.SaveChangesAsync();
-
-            // Return the updated book
             return Ok(book);
+        }
+
+        [HttpDelete]
+        [Route("/DeleteBook")]
+        public async Task<IActionResult> DeleteBook(int id)
+        {
+            var book = await _context.Books
+                .Include(b => b.Authors) 
+                .FirstOrDefaultAsync(b => b.BookId == id);
+
+            if (book == null)
+            {
+                return NotFound("Book not found");
+            }
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
     }
