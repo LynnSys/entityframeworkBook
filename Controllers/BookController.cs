@@ -112,19 +112,10 @@ namespace BookEntityFramework.Controllers
         [Route("/UpdateBookByID")]
         public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
         {
-            var book = await _context.Books
-                .Include(b => b.Authors)
-                .FirstOrDefaultAsync(b => b.BookId == id);
-
-            if (book == null)
-            {
-                return NotFound("Book not found");
-            }
-
             var genre = await _context.Genres.FindAsync(updateBookDto.GenreId);
             if (genre == null)
             {
-                return BadRequest("Invalid GenreId");
+                return BadRequest("Invalid Genre Id");
             }
 
             var authors = await _context.Authors
@@ -135,15 +126,23 @@ namespace BookEntityFramework.Controllers
             {
                 return BadRequest("One or more AuthorIds are invalid");
             }
-            book.Description = updateBookDto.Description;
-            book.Price = updateBookDto.Price;
-            book.AverageRating = updateBookDto.AverageRating;
-            book.GenreId = updateBookDto.GenreId;
-            book.Genre = genre;
-            book.Authors = authors;
-            book.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-            return Ok(book);
+
+            var rowsAffected = await _context.Books
+                .Where(b => b.BookId == id)
+                .ExecuteUpdateAsync(b => b
+                    .SetProperty(b => b.Description, updateBookDto.Description)
+                    .SetProperty(b => b.Price, updateBookDto.Price)
+                    .SetProperty(b => b.AverageRating, updateBookDto.AverageRating)
+                    .SetProperty(b => b.GenreId, updateBookDto.GenreId)
+                    .SetProperty(b => b.UpdatedAt, DateTime.Now)
+                );
+
+            if (rowsAffected == 0)
+            {
+                return NotFound("Book not found");
+            }
+
+            return Ok("Book updated successfully" );
         }
 
         [HttpDelete]

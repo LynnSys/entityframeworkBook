@@ -36,5 +36,26 @@ namespace BookEntityFramework.Controllers
             return Ok(genre);
         }
 
+        [HttpPost]
+        [Route("/EnterNewGenre")]
+        public async Task<ActionResult<Author>> CreateAuthor(AuthorDto a)
+        {
+            var author = new Author
+            {
+                FirstName = a.FirstName,
+                LastName = a.LastName,
+                Biography = a.Biography,
+                Birthdate = a.Birthdate,
+                Country = a.Country,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+            };
+            _context.Authors.Add(author);
+
+
+            await _context.SaveChangesAsync();
+
+            return Ok(author);
+        }
     }
 }
