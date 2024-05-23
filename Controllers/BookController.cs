@@ -88,8 +88,6 @@ namespace BookEntityFramework.Controllers
                 UpdatedAt = DateTime.Now,
             };
 
-
-
             /*********************************************/
             var genre = await _context.Genres.FindAsync(b.GenreId);
             if (genre == null)
