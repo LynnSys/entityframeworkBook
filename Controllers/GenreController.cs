@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BookEntityFramework.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace BookEntityFramework.Controllers
 {
@@ -38,24 +40,34 @@ namespace BookEntityFramework.Controllers
 
         [HttpPost]
         [Route("/EnterNewGenre")]
-        public async Task<ActionResult<Author>> CreateAuthor(AuthorDto a)
+        public async Task<ActionResult<Genre>> CreateGenre(string genreName)
         {
-            var author = new Author
+            var genre = new Genre
             {
-                FirstName = a.FirstName,
-                LastName = a.LastName,
-                Biography = a.Biography,
-                Birthdate = a.Birthdate,
-                Country = a.Country,
+                GenreName = genreName,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
             };
-            _context.Authors.Add(author);
+            _context.Genres.Add(genre);
 
 
             await _context.SaveChangesAsync();
 
-            return Ok(author);
+            return Ok(genre);
+        }
+
+        [HttpDelete]
+        [Route("/DeleteGenre")]
+        public async Task<ActionResult> DeleteGenre(int id)
+        {
+            var rowsAffected = _context.Genres
+                .Where(g => g.GenreId == id)
+                .ExecuteDeleteAsync();
+
+            if(rowsAffected == null)
+                return NotFound("Genre ID not found.");
+
+            return Ok("Genre deleted.");
         }
     }
 }
