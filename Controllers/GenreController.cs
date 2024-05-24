@@ -50,10 +50,10 @@ namespace BookEntityFramework.Controllers
             };
             _context.Genres.Add(genre);
 
-
             await _context.SaveChangesAsync();
 
             return Ok(genre);
+
         }
 
         [HttpDelete]

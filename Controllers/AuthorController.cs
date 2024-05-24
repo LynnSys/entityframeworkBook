@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BookEntityFramework.Repository;
+using BookEntityFramework.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookEntityFramework.Controllers
@@ -7,96 +9,81 @@ namespace BookEntityFramework.Controllers
     [ApiController]
     public class AuthorController : ControllerBase
     {
-        private readonly LynnContext _context;
+        private readonly IAuthorRepository _authorRepository;
 
-        public AuthorController(LynnContext context)
+        public AuthorController(IAuthorRepository authorRepository)
         {
-            _context = context;
+            _authorRepository = authorRepository;   
         }
 
         [HttpGet]
         [Route("/GetAllAuthors")]
-        public async Task<ActionResult<List<Author>>> GetAllAuthors()
+        public async Task<IActionResult> GetAllAuthors()
         {
-            return Ok(await _context.Authors
-                .Include(a => a.Books)
-                .ToListAsync());
+            var result = await _authorRepository.GetAllAuthors();
+
+            if (result == null)
+            { 
+                return BadRequest("No Authors in the database"); 
+            }
+
+            else
+            return Ok(result);
         }
 
         [HttpGet]
         [Route("/GetAuthorById")]
         public async Task<ActionResult<Author>> GetAuthorById(int id)
         {
-            var author = await _context.Authors
-                .Include(a => a.Books)
-                .FirstOrDefaultAsync(a => a.AuthorId == id);
-            if (author == null)
+            var result = _authorRepository.GetAuthorById(id);
+            if (result == null)
             {
-                return NotFound();
+                return NotFound("Entered author id does not exist.");
             }
 
-            return Ok(author);
+            else
+                return Ok(result);
         }
 
         [HttpPost]
-        [Route("/EnterNewAuthor")]
-        public async Task<ActionResult<Author>> CreateAuthor(AuthorDto a)
+        [Route("/CreateAuthor")]
+        public async Task<IActionResult> CreateAuthor(AuthorDto authorDto)
         {
-            var author = new Author
+            var result = await _authorRepository.CreateAuthor(authorDto);
+            if (result == null)
             {
-                FirstName = a.FirstName,
-                LastName = a.LastName,
-                Biography = a.Biography,
-                Birthdate = a.Birthdate,
-                Country = a.Country,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
-            };
-            _context.Authors.Add(author);
+                return BadRequest("Creation unsuccessful");
+            }
 
-    
-            await _context.SaveChangesAsync();
-
-            return Ok(author);
+            else
+                return Ok(result);
         }
+
 
         [HttpPut]
         [Route("/UpdateAuthorByID")]
         public async Task<IActionResult> UpdateAuthor(int id, UpdateAuthorDto updateAuthorDto)
         {
-            var author = await _context.Authors
-                .Include(a => a.Books)
-                .FirstOrDefaultAsync(a => a.AuthorId == id);
-
-            if (author == null)
+            var result = _authorRepository.UpdateAuthor(id, updateAuthorDto);
+            if (result == null)
             {
-                return NotFound("Author not found");
+                return NotFound("Entered author id does not exist.");
             }
-            author.FirstName = updateAuthorDto.FirstName;
-            author.LastName = updateAuthorDto.LastName;
-            author.Biography = updateAuthorDto.Biography;
-            author.Country = updateAuthorDto.Country;
-            author.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-            return Ok(author);
+
+            else
+                return Ok(result);
         }
 
         [HttpDelete]
         [Route("/DeleteAuthor")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
-            var author = await _context.Authors
-                .Include(a => a.Books)
-                .FirstOrDefaultAsync(a => a.AuthorId == id);
+            bool result = await _authorRepository.DeleteAuthor(id);
+            if (result == false)
+                return BadRequest("Deletion unsuccessfully.");
 
-            if (author == null)
-            {
-                return NotFound("Author not found");
-            }
-
-            _context.Authors.Remove(author);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            else
+                return Ok(result);
         }
 
     }
