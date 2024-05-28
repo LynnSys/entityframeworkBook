@@ -25,4 +25,23 @@ public partial class Book
     public int GenreId { get; set; }
     public virtual Genre Genre { get; set; } = null!;
     public virtual ICollection<Author> Authors { get; set; } = new List<Author>();
+
+    public Book()
+    {}
+
+    public Book(BookDto bookDto)
+    {
+        Title = bookDto.Title;
+        Description = bookDto.Description;
+        Isbn = bookDto.Isbn;
+        PublicationDate = bookDto.PublicationDate;
+        Price = bookDto.Price;
+        Language = bookDto.Language;
+        Publisher = bookDto.Publisher;
+        PageCount = bookDto.PageCount;
+        AverageRating = bookDto.AverageRating;
+        GenreId = bookDto.GenreId;
+        CreatedAt = DateTime.Now;
+        UpdatedAt = DateTime.Now;
+    }
 }

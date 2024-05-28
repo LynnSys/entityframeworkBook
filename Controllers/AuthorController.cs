@@ -64,7 +64,7 @@ namespace BookEntityFramework.Controllers
         [Route("/UpdateAuthorByID")]
         public async Task<IActionResult> UpdateAuthor(int id, UpdateAuthorDto updateAuthorDto)
         {
-            var result = _authorRepository.UpdateAuthor(id, updateAuthorDto);
+            var result = await _authorRepository.UpdateAuthor(id, updateAuthorDto);
             if (result == null)
             {
                 return NotFound("Entered author id does not exist.");

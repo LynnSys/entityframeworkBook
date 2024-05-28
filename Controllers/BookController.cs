@@ -1,4 +1,6 @@
+using BookEntityFramework.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookEntityFramework.Controllers
 {
@@ -6,109 +8,50 @@ namespace BookEntityFramework.Controllers
     [Route("[controller]")]
     public class BookController : ControllerBase
     {
-        //private static readonly string[] Summaries = new[]
-        //{
-        //    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        //};
 
-        private readonly ILogger<BookController> _logger;
+        private readonly IBookRepository _bookRepository;
         private readonly LynnContext _context;
-        public BookController(ILogger<BookController> logger, LynnContext context)
+        public BookController(IBookRepository bookRepository, LynnContext context)
         {
-            _logger = logger;
+            _bookRepository = bookRepository;
             _context = context;
         }
 
-        //[HttpGet(Name = "GetWeatherForecast")]
-        //public IEnumerable<WeatherForecast> Get()
-        //{
-        //    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        //    {
-        //        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-        //        TemperatureC = Random.Shared.Next(-20, 55),
-        //        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        //    })
-        //    .ToArray();
-        //}
 
         [HttpGet]
         [Route("/GetAllBooks")]
-        public async Task<ActionResult<List<Book>>> Get()
+        public async Task<ActionResult<List<Book>>> GetAllBooks()
         {
-            return Ok(await _context.Books
-                .Include(a=>a.Authors)
-                .Include(b => b.Genre)
-                .ToListAsync());
+            var results = await _bookRepository.GetAllBooks();
+            if (results == null)
+                return BadRequest("No books present in database.");
+            return Ok(results);
         }
 
-        //[HttpPost]
-        //[Route("/EnterNewBook")]
-        //public async Task<ActionResult<List<Book>>> AddBook()
-        //{
-        //    return Ok(await _context.Books
-        //        .Include(a => a.Authors)
-        //        .Include(b => b.Genre)
-        //        .ToListAsync());
-        //}
 
         [HttpGet]
         [Route("/GetById")]
         public async Task<ActionResult<Book>> GetBookById(int id)
         {
-            var book = await _context.Books
-                .Include(b => b.Authors)
-                .Include(b => b.Genre)
-                .FirstOrDefaultAsync(b => b.BookId == id);
-
-            if (book == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(book);
+            var results = _bookRepository.GetBookById(id);
+            if (results == null)
+                return BadRequest("No books present in database.");
+            return Ok(results);
         }
 
         [HttpPost]
         [Route("/EnterNewBook")]
-        public async Task<ActionResult<Book>> CreateBook(BookDto b)
+        public async Task<ActionResult<Book>> CreateBook(BookDto bk)
         {
-            var book = new Book
-            {
-                Title = b.Title,
-                Description = b.Description,
-                Isbn = b.Isbn,
-                PublicationDate = b.PublicationDate,
-                Price = b.Price,
-                Language = b.Language,
-                Publisher = b.Publisher,
-                PageCount = b.PageCount,
-                AverageRating = b.AverageRating,
-                GenreId = b.GenreId,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
-            };
-
-            /*********************************************/
-            var genre = await _context.Genres.FindAsync(b.GenreId);
-            if (genre == null)
-            {
-                return BadRequest("Invalid Genre ID");
-            }
-
-            var authors = await _context.Authors
-                .Where(a => b.AuthorIds.Contains(a.AuthorId))
-                .ToListAsync();
-
-            book.Authors = authors;
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-
+            var book = _bookRepository.CreateBook(bk);
+            if (bk == null)
+                return BadRequest("Book creation unsuccessful");
             return Ok(book);
         }
 
         [HttpPut]
         [Route("/UpdateBookByID")]
-        public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
+        public async Task<IActionResult> UpdateBook(int id, [FromBody] UpdateBookDto updateBookDto)
         {
             var genre = await _context.Genres.FindAsync(updateBookDto.GenreId);
             if (genre == null)
@@ -125,39 +68,25 @@ namespace BookEntityFramework.Controllers
                 return BadRequest("One or more AuthorIds are invalid");
             }
 
-            var rowsAffected = await _context.Books
-                .Where(b => b.BookId == id)
-                .ExecuteUpdateAsync(b => b
-                    .SetProperty(b => b.Description, updateBookDto.Description)
-                    .SetProperty(b => b.Price, updateBookDto.Price)
-                    .SetProperty(b => b.AverageRating, updateBookDto.AverageRating)
-                    .SetProperty(b => b.GenreId, updateBookDto.GenreId)
-                    .SetProperty(b => b.UpdatedAt, DateTime.Now)
-                );
+            return Ok(_bookRepository.UpdateBook(id, updateBookDto));
 
-            if (rowsAffected == 0)
-            {
-                return NotFound("Book not found");
-            }
+            //if (updatebook == null)
+            //{
+            //    return NotFound("Book not found");
+            //}
 
-            return Ok("Book updated successfully" );
+            //return Ok(updatebook);
         }
 
         [HttpDelete]
         [Route("/DeleteBook")]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            var book = await _context.Books
-                .Include(b => b.Authors) 
-                .FirstOrDefaultAsync(b => b.BookId == id);
-
-            if (book == null)
-            {
-                return NotFound("Book not found");
-            }
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var results = await _bookRepository.DeleteBook(id);
+            if (results.Equals(false))
+                return NotFound("Book Not Found");
+            else
+            return Ok("Deletion successful");
         }
 
     }

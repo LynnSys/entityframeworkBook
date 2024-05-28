@@ -1,4 +1,5 @@
-﻿using BookEntityFramework.Repository;
+﻿using BookEntityFramework.Models;
+using BookEntityFramework.Repository;
 using BookEntityFramework.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,12 +16,16 @@ namespace BookEntityFramework.Repository
 
         public async Task<List<Author>> GetAllAuthors()
         {
-            return await _context.Authors.Include(a => a.Books).ToListAsync();
+            return await _context.Authors
+                .Include(a => a.Books)
+                .ToListAsync();
         }
 
         public async Task<Author> GetAuthorById(int id)
         {
-            return await _context.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.AuthorId == id);
+            return await _context.Authors
+                .Include(a => a.Books)
+                .FirstOrDefaultAsync(a => a.AuthorId == id);
         }
 
         public async Task<Author> CreateAuthor(AuthorDto authorDto)
@@ -43,22 +48,23 @@ namespace BookEntityFramework.Repository
         }
 
         public async Task<Author> UpdateAuthor(int id, UpdateAuthorDto updateAuthorDto)
-        {
-            var author = await _context.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.AuthorId == id);
+        { 
+                var updateAuthor = await _context.Authors
+                .FirstOrDefaultAsync(a => a.AuthorId == id);
 
-            if (author == null)
-            {
-                return null;
-            }
+                if (updateAuthor == null)
+                {
+                    throw new Exception("Author not found, please enter valid author ID");
+                }
+                updateAuthor.FirstName = updateAuthorDto.FirstName;
+                updateAuthor.LastName = updateAuthorDto.LastName;
+                updateAuthor.Biography = updateAuthorDto.Biography;
+                updateAuthor.Country = updateAuthorDto.Country;
+                updateAuthor.UpdatedAt = DateTime.Now;
 
-            author.FirstName = updateAuthorDto.FirstName;
-            author.LastName = updateAuthorDto.LastName;
-            author.Biography = updateAuthorDto.Biography;
-            author.Country = updateAuthorDto.Country;
-            author.UpdatedAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+                return updateAuthor;
 
-            await _context.SaveChangesAsync();
-            return author;
         }
 
         public async Task<bool> DeleteAuthor(int id)

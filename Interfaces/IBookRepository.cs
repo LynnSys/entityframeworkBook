@@ -1,12 +1,14 @@
-﻿namespace BookEntityFramework.Services
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace BookEntityFramework.Services
 {
     public interface IBookRepository
     {
-        public List<Book> GetAllBooks();
-        public Book AddBook(BookDto book, List<int> authors);
-        public Book AddBookWithAuthors(BookDto book, List<int> authors);
-        public Book GetById(int id);
-        public Book UpdateBook(int id, UpdateBookDto book);
-        public List<Book> DeleteBookById(int id);
+        public Task<List<Book>> GetAllBooks();
+        public Task<Book> GetBookById(int id);
+        public Task<Book> CreateBook(BookDto bookDto);
+        public string UpdateBook(int id, UpdateBookDto updateBookDto);
+        public Task<bool> DeleteBook(int id);
     }
 }
