@@ -1,4 +1,5 @@
-﻿using BookEntityFramework.Repository;
+﻿using BookEntityFramework.Interfaces;
+using BookEntityFramework.Repository;
 using BookEntityFramework.Services;
 using Microsoft.AspNetCore.Identity.Data;
 
@@ -10,8 +11,8 @@ namespace BookEntityFramework.Extensions
         {
             services.AddScoped<IAuthorRepository, AuthorRepository>();
             services.AddScoped<IBookRepository, BookRepository>();
-            //    services.AddSingleton<IDatabaseManager, BooksStoredProcedure>();
-            //    services.AddSingleton<IAuthorDatabaseManager, AuthorStoredProcedure>();
+            services.AddScoped<IUser, LoginRepository>();
+            services.AddScoped<ISearch, SearchRepository>();
         }
     }
 }

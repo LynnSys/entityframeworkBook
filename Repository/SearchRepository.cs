@@ -16,6 +16,7 @@ namespace BookEntityFramework.Repository
                 .Where(b => b.Authors.Any(a => a.AuthorId == authorId))
                 .Include(b => b.Authors)
                 .ToListAsync();
+
             return books;
         }
         public async Task<Book> GetBookByTitle(string title)

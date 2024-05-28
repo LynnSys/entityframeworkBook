@@ -1,5 +1,6 @@
 global using BookEntityFramework.Models;
 global using Microsoft.EntityFrameworkCore;
+using BookEntityFramework.AppSetttings;
 using BookEntityFramework.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,11 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 //Registering Repository services
 builder.Services.AddRepository();
 builder.Services.AddControllers();
+builder.Services.Configure<JwtClaimDetails>(builder.Configuration.GetSection("Jwt"));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.SwaggerAuthorization();
+builder.Services.AuthenticationExt(builder.Configuration);
 
 
 
@@ -35,7 +38,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

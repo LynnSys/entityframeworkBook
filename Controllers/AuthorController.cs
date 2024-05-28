@@ -33,7 +33,7 @@ namespace BookEntityFramework.Controllers
 
         [HttpGet]
         [Route("/GetAuthorById")]
-        public async Task<ActionResult<Author>> GetAuthorById(int id)
+        public async Task<IActionResult> GetAuthorById(int id)
         {
             var result = _authorRepository.GetAuthorById(id);
             if (result == null)

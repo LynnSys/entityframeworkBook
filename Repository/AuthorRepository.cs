@@ -23,9 +23,9 @@ namespace BookEntityFramework.Repository
 
         public async Task<Author> GetAuthorById(int id)
         {
-            return await _context.Authors
+            return _context.Authors
                 .Include(a => a.Books)
-                .FirstOrDefaultAsync(a => a.AuthorId == id);
+                .FirstOrDefault(a => a.AuthorId == id);
         }
 
         public async Task<Author> CreateAuthor(AuthorDto authorDto)
